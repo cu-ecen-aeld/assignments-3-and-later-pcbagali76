@@ -8,7 +8,16 @@ set -u
 NUMFILES=10
 WRITESTR=AELD_IS_FUN
 WRITEDIR=/tmp/aeld-data
-username=$(cat conf/username.txt)
+
+if [ -d /etc/finder-app/conf ]; then
+	CONF_DIR=/etc/finder-app/conf
+elif [ -d conf ]; then
+	CONF_DIR=conf
+else
+	CONF_DIR=../conf
+fi
+
+username=$(cat ${CONF_DIR}/username.txt)
 
 if [ $# -lt 3 ]
 then
@@ -32,15 +41,12 @@ echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 rm -rf "${WRITEDIR}"
 
 # create $WRITEDIR if not assignment1
-assignment=`cat conf/assignment.txt`
+assignment=$(cat ${CONF_DIR}/assignment.txt)
 
-if [ $assignment != 'assignment1' ]
+if [ "$assignment" != 'assignment1' ]
 then
 	mkdir -p "$WRITEDIR"
 
-	#The WRITEDIR is in quotes because if the directory path consists of spaces, then variable substitution will consider it as multiple argument.
-	#The quotes signify that the entire string in WRITEDIR is a single string.
-	#This issue can also be resolved by using double square brackets i.e [[ ]] instead of using quotes.
 	if [ -d "$WRITEDIR" ]
 	then
 		echo "$WRITEDIR created"
@@ -50,10 +56,13 @@ then
 fi
 for i in $( seq 1 $NUMFILES)
 do
-	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
-OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
+OUTPUTSTRING=$(finder.sh "$WRITEDIR" "$WRITESTR")
+
+# Write output to /tmp/assignment4-result.txt as required by Assignment 4 Part 2
+echo "${OUTPUTSTRING}" > /tmp/assignment4-result.txt
 
 # remove temporary directories
 rm -rf /tmp/aeld-data
